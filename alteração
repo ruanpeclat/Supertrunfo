@@ -10,11 +10,26 @@ typedef struct {
     float area;
     float pib;
     int pontosTuristicos;
+    float densidadePopulacional;
+    float pibPerCapita;
 } CartaCidade;
 
 void limparBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
+}
+
+void calcularAtributosDerivados(CartaCidade *carta) {
+    if (carta->area > 0) {
+        carta->densidadePopulacional = carta->populacao / carta->area;
+    } else {
+        carta->densidadePopulacional = 0;
+    }
+    if (carta->populacao > 0) {
+        carta->pibPerCapita = carta->pib / carta->populacao;
+    } else {
+        carta->pibPerCapita = 0;
+    }
 }
 
 void lerCarta(CartaCidade *carta) {
@@ -31,16 +46,28 @@ void lerCarta(CartaCidade *carta) {
     carta->nomeCidade[strcspn(carta->nomeCidade, "\n")] = '\0'; // Remove o \n
 
     printf("População: ");
-    scanf(" %f", &carta->populacao);
+    if (scanf(" %f", &carta->populacao) != 1) {  // Verifica erro de entrada
+        printf("Erro: Entrada inválida para população.\n");
+        carta->populacao = 0;
+    }
 
     printf("Área (km²): ");
-    scanf(" %f", &carta->area);
+    if (scanf(" %f", &carta->area) != 1) {  // Verifica erro de entrada
+        printf("Erro: Entrada inválida para área.\n");
+        carta->area = 0;
+    }
 
     printf("PIB (bilhões de reais): ");
-    scanf(" %f", &carta->pib);
+    if (scanf(" %f", &carta->pib) != 1) {  // Verifica erro de entrada
+        printf("Erro: Entrada inválida para PIB.\n");
+        carta->pib = 0;
+    }
 
     printf("Número de pontos turísticos: ");
-    scanf(" %d", &carta->pontosTuristicos);
+    if (scanf(" %d", &carta->pontosTuristicos) != 1) {  // Verifica erro de entrada
+        printf("Erro: Entrada inválida para pontos turísticos.\n");
+        carta->pontosTuristicos = 0;
+    }
 
     limparBuffer(); // Limpa o buffer após entrada numérica
 }
@@ -54,6 +81,49 @@ void exibirCarta(const CartaCidade *carta) {
     printf("Área: %.2f km²\n", carta->area);
     printf("PIB: %.2f bilhões de reais\n", carta->pib);
     printf("Número de pontos turísticos: %d\n", carta->pontosTuristicos);
+    printf("Densidade Populacional: %.2f hab/km²\n", carta->densidadePopulacional);
+    printf("PIB per Capita: %.2f\n", carta->pibPerCapita);
+}
+
+void compararCartas(const CartaCidade *c1, const CartaCidade *c2, char atributo) {
+    printf("\nComparando cartas (Atributo: %c):\n", atributo);
+    exibirCarta(c1);
+    exibirCarta(c2);
+
+    int c1Vence = 0, c2Vence = 0;
+
+    switch (atributo) {
+        case 'P': // População
+            c1Vence = c1->populacao > c2->populacao;
+            c2Vence = c1->populacao < c2->populacao;
+            break;
+        case 'A': // Área
+            c1Vence = c1->area > c2->area;
+            c2Vence = c1->area < c2->area;
+            break;
+        case 'B': // PIB
+            c1Vence = c1->pib > c2->pib;
+            c2Vence = c1->pib < c2->pib;
+            break;
+        case 'D': // Densidade Populacional (menor vence)
+            c1Vence = c1->densidadePopulacional < c2->densidadePopulacional;
+            c2Vence = c1->densidadePopulacional > c2->densidadePopulacional;
+            break;
+        case 'C': // PIB per Capita
+            c1Vence = c1->pibPerCapita > c2->pibPerCapita;
+            c2Vence = c1->pibPerCapita < c2->pibPerCapita;
+            break;
+        default:
+            printf("Atributo inválido.\n");
+            return;
+    }
+
+    if (c1Vence)
+        printf("Resultado: Carta 1 (%s) venceu!\n", c1->nomeCidade);
+    else if (c2Vence)
+        printf("Resultado: Carta 2 (%s) venceu!\n", c2->nomeCidade);
+    else
+        printf("Resultado: Empate!\n");
 }
 
 int main() {
@@ -62,13 +132,21 @@ int main() {
 
     printf("\n--- Insira os dados da primeira carta ---\n");
     lerCarta(&carta1);
+    calcularAtributosDerivados(&carta1);
 
     printf("\n--- Insira os dados da segunda carta ---\n");
     lerCarta(&carta2);
+    calcularAtributosDerivados(&carta2);
 
     printf("\n========= Cartas Digitadas =========\n");
     exibirCarta(&carta1);
     exibirCarta(&carta2);
+
+    char atributo;
+    printf("\nEscolha o atributo para comparação: 'P' (População), 'A' (Área), 'B' (PIB), 'D' (Densidade Populacional), 'C' (PIB per Capita): ");
+    scanf(" %c", &atributo);
+
+    compararCartas(&carta1, &carta2, atributo);
 
     return 0;
 }
